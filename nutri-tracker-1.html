@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriTracker">
+<title>NutriTracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --accent: #7fffb2;
+    --accent-dim: #3d7a56;
+    --warn: #ffb347;
+    --danger: #ff6b6b;
+    --text: #e8eaf0;
+    --muted: #6b7080;
+    --purple: #b388ff;
+    --blue: #4fc3f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100vh;
+    max-width: 500px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+  }
+  input, textarea, button, select { font-family: inherit; }
+  input[type="date"] { color-scheme: dark; }
+
+  /* Header */
+  .header {
+    padding: 52px 16px 0;
+    background: linear-gradient(180deg, #0d1520 0%, #0f1117 100%);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .header-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .header-name { font-size: 20px; font-weight: 700; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  /* Macro bar */
+  .macro-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .macro-label { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .macro-value { font-size: 12px; font-family: 'DM Mono', monospace; }
+  .macro-track { height: 4px; background: #2a2d3a; border-radius: 2px; overflow: hidden; margin-bottom: 12px; }
+  .macro-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+  /* Pills */
+  .pills { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+  .pill {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; white-space: nowrap; flex-shrink: 0;
+  }
+  .pill-label { color: var(--muted); font-size: 10px; }
+  .pill-val { font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* Meal cards */
+  .meal-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+  }
+  .meal-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; }
+  .meal-emoji { font-size: 20px; }
+  .meal-info { flex: 1; }
+  .meal-name { font-size: 13px; font-weight: 500; }
+  .meal-meta { color: var(--muted); font-size: 11px; }
+  .meal-badge { background: #7fffb222; color: var(--accent); border-radius: 4px; padding: 2px 7px; font-size: 11px; }
+  .meal-body { border-top: 1px solid var(--border); padding: 10px 14px; background: #13151e; }
+  .meal-desc { color: var(--muted); font-size: 12px; margin-bottom: 8px; line-height: 1.6; }
+  .meal-macros { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .meal-macro { color: var(--muted); font-size: 11px; }
+  .meal-macro b { color: var(--text); }
+  .meal-note { color: var(--accent-dim); font-size: 11px; font-style: italic; margin-bottom: 8px; }
+
+  /* Buttons */
+  .btn {
+    border: none; border-radius: 8px; padding: 12px; font-size: 14px;
+    font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-primary { background: var(--accent); color: #0f1117; width: 100%; }
+  .btn-secondary { background: #2a2d3a; color: var(--muted); }
+  .btn-danger { background: #ff6b6b22; color: var(--danger); border: 1px solid #ff6b6b44; font-size: 11px; padding: 4px 10px; font-weight: 400; }
+  .btn-outline { background: #b388ff22; border: 1px solid #b388ff44; color: var(--purple); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; }
+  .btn-report { background: #b388ff22; border: 1px solid #b388ff44; color: var(--purple); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Inputs */
+  .input {
+    width: 100%; background: #13151e; border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px 12px;
+    font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .input:focus { border-color: var(--accent-dim); }
+  textarea.input { resize: vertical; min-height: 88px; }
+  .input-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 5px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: #000000cc; z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .modal-sheet {
+    background: var(--card); border-radius: 16px 16px 0 0;
+    width: 100%; max-width: 500px; padding: 20px;
+    border: 1px solid var(--border); max-height: 88vh; overflow-y: auto;
+  }
+  .modal-center {
+    position: fixed; inset: 0; background: #000000cc; z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-box {
+    background: var(--card); border-radius: 16px;
+    width: 100%; max-width: 500px; padding: 20px;
+    border: 1px solid var(--border); max-height: 82vh; overflow-y: auto;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+
+  /* Result grid */
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .result-cell { background: #1a1d27; border-radius: 6px; padding: 8px 10px; }
+  .result-cell-label { color: var(--muted); font-size: 10px; }
+  .result-cell-val { font-size: 20px; font-weight: 700; }
+  .result-cell-unit { font-size: 11px; color: var(--muted); }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+    background: var(--accent); border: none; border-radius: 50%;
+    font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px #7fffb266;
+    display: flex; align-items: center; justify-content: center; z-index: 50;
+    color: #0f1117; font-weight: 300; line-height: 1;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .fab:active { transform: scale(0.93); }
+
+  /* Settings */
+  .settings-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .key-display {
+    flex: 1; background: #13151e; border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; font-size: 12px;
+    color: var(--muted); font-family: 'DM Mono', monospace; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; animation: spin 1s linear infinite; font-size: 28px; }
+
+  /* Photo preview */
+  .photo-preview { width: 100%; border-radius: 8px; margin-top: 8px; max-height: 160px; object-fit: cover; display: block; }
+  .photo-btn {
+    width: 100%; margin-top: 8px; background: #13151e;
+    border: 1px dashed var(--border); color: var(--muted);
+    border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer;
+  }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 48px 0; color: var(--muted); }
+  .empty-icon { font-size: 40px; margin-bottom: 8px; }
+
+  /* Date input */
+  .date-input {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px 12px;
+    font-size: 13px; margin-bottom: 14px; outline: none;
+  }
+
+  /* Calorie display */
+  .kcal-big { font-size: 32px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .kcal-meta { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* Report text */
+  .report-text { color: var(--text); font-size: 13px; line-height: 1.75; white-space: pre-wrap; }
+
+  /* Nav tabs */
+  .tabs { display: flex; gap: 4px; padding: 0 16px 14px; }
+  .tab {
+    flex: 1; padding: 7px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+    text-align: center; transition: all 0.15s;
+  }
+  .tab.active { background: #7fffb222; border-color: var(--accent-dim); color: var(--accent); font-weight: 600; }
+
+  /* API key setup screen */
+  .setup-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 32px 24px;
+    text-align: center;
+  }
+  .setup-logo { font-size: 56px; margin-bottom: 20px; }
+  .setup-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .setup-sub { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+  .setup-link { color: var(--accent); text-decoration: none; }
+
+  /* History view */
+  .history-day { margin-bottom: 18px; }
+  .history-date { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+
+  .conf-badge { font-size: 10px; border-radius: 4px; padding: 2px 6px; }
+  .conf-high { background: #7fffb222; color: var(--accent); }
+  .conf-medium { background: #ffb34722; color: var(--warn); }
+  .conf-low { background: #ff6b6b22; color: var(--danger); }
+
+  .section { padding: 0 16px; }
+  .chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const TARGET = { kcalMin: 1500, kcalMax: 1700, protein: 100, fiber: 25 };
+const MEALS_KEY = 'nutri_meals_v2';
+const KEY_KEY = 'nutri_api_key';
+
+let state = {
+  view: 'today',         // today | history | settings
+  meals: [],
+  apiKey: '',
+  filterDate: todayStr(),
+  modal: null,           // null | 'add' | 'report' | 'settings'
+  addStep: 'input',      // input | analyzing | done
+  addText: '',
+  addImageB64: null,
+  addImageURL: null,
+  addResult: null,
+  addError: null,
+  addDate: todayStr(),
+  expandedMeals: new Set(),
+  reportText: '',
+  reportLoading: false,
+};
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ─── Storage ─────────────────────────────────────────────────────────────────
+function loadState() {
+  try { state.meals = JSON.parse(localStorage.getItem(MEALS_KEY) || '[]'); } catch {}
+  state.apiKey = localStorage.getItem(KEY_KEY) || '';
+}
+function saveMeals() { localStorage.setItem(MEALS_KEY, JSON.stringify(state.meals)); }
+function saveKey(k) { localStorage.setItem(KEY_KEY, k); }
+
+// ─── Computed ─────────────────────────────────────────────────────────────────
+function dayTotals(date) {
+  return state.meals
+    .filter(m => m.date === date)
+    .reduce((a, m) => ({
+      kcal: a.kcal + (m.kcal || 0),
+      protein: a.protein + (m.protein || 0),
+      fiber: a.fiber + (m.fiber || 0),
+      fat: a.fat + (m.fat || 0),
+      carbs: a.carbs + (m.carbs || 0),
+    }), { kcal: 0, protein: 0, fiber: 0, fat: 0, carbs: 0 });
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+async function callClaude(messages, maxTokens = 1000) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, messages }),
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content?.find(b => b.type === 'text')?.text || '';
+}
+
+async function analyzeMeal() {
+  state.addStep = 'analyzing';
+  state.addError = null;
+  render();
+
+  try {
+    const userContent = [];
+    if (state.addImageB64) {
+      userContent.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: state.addImageB64 } });
+    }
+    userContent.push({ type: 'text', text: state.addText || 'Analise a imagem da refeição.' });
+    userContent.push({
+      type: 'text', text: `
+Analise essa refeição e retorne APENAS um JSON válido (sem markdown, sem backticks, sem texto extra) com este formato exato:
+{"label":"nome curto","emoji":"emoji","kcal":0,"protein":0,"fat":0,"carbs":0,"fiber":0,"description":"alimentos e porções estimadas","notes":"dica nutricional ou string vazia","confidence":"low|medium|high"}
+Seja conservador. Contexto: adulto em restrição calórica (1500-1700 kcal/dia), meta 100g+ proteína, 25-35g fibra.`
+    });
+
+    const raw = await callClaude([{ role: 'user', content: userContent }]);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    parsed.id = Date.now().toString();
+    parsed.time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    parsed.date = state.addDate;
+    state.addResult = parsed;
+    state.addStep = 'done';
+  } catch(e) {
+    state.addError = 'Erro: ' + e.message;
+    state.addStep = 'input';
+  }
+  render();
+}
+
+async function generateReport() {
+  state.reportLoading = true;
+  state.reportText = '';
+  render();
+
+  const summary = state.meals
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(m => `${m.date} ${m.time} — ${m.label}: ${m.kcal}kcal, ${m.protein}g prot, ${m.fiber}g fibra, ${m.carbs}g carbs, ${m.fat}g gord`)
+    .join('\n');
+
+  try {
+    state.reportText = await callClaude([{
+      role: 'user',
+      content: `Analise este histórico nutricional e gere um relatório conciso em português com:
+1. Padrões e tendências observadas (pontos fortes e fracos recorrentes)
+2. Comparação com as metas diárias: ${TARGET.kcalMin}–${TARGET.kcalMax} kcal, ${TARGET.protein}g+ proteína, ${TARGET.fiber}–35g fibra
+3. 3 recomendações práticas e prioritárias
+4. Nota geral de adesão às metas (A/B/C/D)
+
+Histórico:\n${summary || 'Sem refeições registradas ainda.'}`
+    }], 1200);
+  } catch(e) {
+    state.reportText = 'Erro ao gerar relatório: ' + e.message;
+  }
+  state.reportLoading = false;
+  render();
+}
+
+// ─── Render helpers ───────────────────────────────────────────────────────────
+function macroBar(label, value, target, unit, color) {
+  const pct = Math.min((value / target) * 100, 100);
+  const over = value > target;
+  const barColor = over ? 'var(--warn)' : color;
+  const valColor = over ? 'var(--warn)' : 'var(--text)';
+  return `
+  <div class="macro-row">
+    <span class="macro-label">${label}</span>
+    <span class="macro-value" style="color:${valColor}">${Math.round(value)}<span style="color:var(--muted)">/${target}${unit}</span></span>
+  </div>
+  <div class="macro-track">
+    <div class="macro-fill" style="width:${pct}%;background:${barColor};box-shadow:0 0 8px ${barColor}55"></div>
+  </div>`;
+}
+
+function mealCard(meal) {
+  const expanded = state.expandedMeals.has(meal.id);
+  const confClass = { high: 'conf-high', medium: 'conf-medium', low: 'conf-low' }[meal.confidence] || 'conf-medium';
+  return `
+  <div class="meal-card">
+    <div class="meal-header" onclick="toggleMeal('${meal.id}')">
+      <span class="meal-emoji">${meal.emoji || '🍽️'}</span>
+      <div class="meal-info">
+        <div class="meal-name">${meal.label}</div>
+        <div class="meal-meta">${meal.time} · ${meal.kcal} kcal</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="meal-badge">${meal.protein}g P</span>
+        <span class="chevron ${expanded ? 'open' : ''}">▼</span>
+      </div>
+    </div>
+    ${expanded ? `
+    <div class="meal-body">
+      <p class="meal-desc">${meal.description}</p>
+      <div class="meal-macros">
+        <span class="meal-macro">🔥 <b>${meal.kcal}</b> kcal</span>
+        <span class="meal-macro">💪 <b>${meal.protein}</b>g prot</span>
+        <span class="meal-macro">🌿 <b>${meal.fiber}</b>g fibra</span>
+        <span class="meal-macro">🫙 <b>${meal.fat}</b>g gord</span>
+        <span class="meal-macro">🍞 <b>${meal.carbs}</b>g carb</span>
+        <span class="conf-badge ${confClass}">${meal.confidence}</span>
+      </div>
+      ${meal.notes ? `<p class="meal-note">💡 ${meal.notes}</p>` : ''}
+      <button class="btn btn-danger" onclick="deleteMeal('${meal.id}')">Excluir</button>
+    </div>` : ''}
+  </div>`;
+}
+
+function kcalColor(kcal) {
+  if (kcal > TARGET.kcalMax) return 'var(--danger)';
+  if (kcal >= TARGET.kcalMin) return 'var(--accent)';
+  return 'var(--warn)';
+}
+
+function kcalStatus(kcal) {
+  if (kcal > TARGET.kcalMax) return `${Math.round(kcal - TARGET.kcalMax)} kcal acima`;
+  if (kcal >= TARGET.kcalMin) return '✓ Dentro da meta';
+  return `${Math.round(TARGET.kcalMin - kcal)} kcal abaixo`;
+}
+
+// ─── Screens ──────────────────────────────────────────────────────────────────
+function renderSetup() {
+  return `
+  <div class="setup-screen">
+    <div class="setup-logo">🥗</div>
+    <div class="setup-title">NutriTracker</div>
+    <p class="setup-sub">Para usar a análise por IA, insira sua chave da API da Anthropic.<br>
+    Ela fica salva <b>só neste dispositivo</b>.<br><br>
+    <a class="setup-link" href="https://console.anthropic.com" target="_blank">Criar chave → console.anthropic.com</a></p>
+    <div style="width:100%;margin-bottom:12px">
+      <label class="input-label">Anthropic API Key</label>
+      <input id="setup-key" class="input" type="password" placeholder="sk-ant-..." value="${state.apiKey}">
+    </div>
+    <button class="btn btn-primary" onclick="saveApiKey()">Salvar e entrar →</button>
+  </div>`;
+}
+
+function renderToday() {
+  const meals = state.meals.filter(m => m.date === state.filterDate).sort((a,b) => a.time.localeCompare(b.time));
+  const t = dayTotals(state.filterDate);
+  const kColor = kcalColor(t.kcal);
+
+  return `
+  <div style="padding:0 16px 10px">
+    <input type="date" class="date-input" value="${state.filterDate}" onchange="setDate(this.value)">
+
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+        <div style="text-align:center;min-width:64px">
+          <div class="kcal-big" style="color:${kColor}">${Math.round(t.kcal)}</div>
+          <div class="kcal-meta">kcal</div>
+        </div>
+        <div style="flex:1">
+          <div class="macro-row">
+            <span class="macro-label">Meta diária</span>
+            <span style="font-size:11px;font-family:'DM Mono',monospace;color:${kColor}">${TARGET.kcalMin}–${TARGET.kcalMax}</span>
+          </div>
+          <div class="macro-track" style="height:6px;margin-bottom:6px">
+            <div class="macro-fill" style="width:${Math.min((t.kcal/TARGET.kcalMax)*100,100)}%;background:${kColor};box-shadow:0 0 10px ${kColor}66;height:6px"></div>
+          </div>
+          <div style="font-size:11px;color:${kColor}">${kcalStatus(t.kcal)}</div>
+        </div>
+      </div>
+      ${macroBar('Proteína', t.protein, TARGET.protein, 'g', 'var(--accent)')}
+      ${macroBar('Fibra', t.fiber, TARGET.fiber, 'g', 'var(--purple)')}
+    </div>
+
+    <div class="pills">
+      <div class="pill"><span class="pill-label">Carbs </span><span class="pill-val" style="color:var(--blue)">${Math.round(t.carbs)}g</span></div>
+      <div class="pill"><span class="pill-label">Gordura </span><span class="pill-val" style="color:var(--warn)">${Math.round(t.fat)}g</span></div>
+      <div class="pill"><span class="pill-label">Refeições </span><span class="pill-val" style="color:var(--muted)">${meals.length}</span></div>
+    </div>
+  </div>
+
+  <div style="padding:0 16px">
+    ${meals.length === 0
+      ? `<div class="empty"><div class="empty-icon">🍽️</div><p>Nenhuma refeição neste dia.</p></div>`
+      : meals.map(mealCard).join('')
+    }
+  </div>`;
+}
+
+function renderHistory() {
+  const byDate = {};
+  state.meals.forEach(m => {
+    if (!byDate[m.date]) byDate[m.date] = [];
+    byDate[m.date].push(m);
+  });
+  const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+
+  if (dates.length === 0) return `<div class="section"><div class="empty"><div class="empty-icon">📅</div><p>Sem histórico ainda.</p></div></div>`;
+
+  return `<div class="section">${dates.map(date => {
+    const meals = byDate[date].sort((a,b) => a.time.localeCompare(b.time));
+    const t = dayTotals(date);
+    const kc = kcalColor(t.kcal);
+    const d = new Date(date + 'T12:00:00');
+    const label = d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
+    return `
+    <div class="history-day">
+      <div class="history-date" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${label}</span>
+        <span style="color:${kc};font-family:'DM Mono',monospace;font-size:12px">${Math.round(t.kcal)} kcal · ${Math.round(t.protein)}g P · ${Math.round(t.fiber)}g F</span>
+      </div>
+      ${meals.map(mealCard).join('')}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderSettings() {
+  const masked = state.apiKey ? state.apiKey.slice(0,8) + '•••••••••••••••' + state.apiKey.slice(-4) : '—';
+  return `
+  <div class="section">
+    <div class="card" style="margin-top:8px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px">🔑 API Key</div>
+      <div class="settings-row">
+        <div class="key-display">${masked}</div>
+        <button class="btn btn-outline" onclick="promptChangeKey()">Alterar</button>
+      </div>
+      <p style="color:var(--muted);font-size:11px;line-height:1.6">A chave é armazenada apenas localmente neste dispositivo (localStorage). Nunca é enviada a nenhum servidor além da API da Anthropic.</p>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px">🎯 Metas</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${[['🔥 Calorias', `${TARGET.kcalMin}–${TARGET.kcalMax} kcal`],['💪 Proteína', `${TARGET.protein}g+`],['🌿 Fibra', `${TARGET.fiber}–35g`],['⚖️ Método', 'US Navy Tape']].map(([l,v]) => `
+        <div style="background:#13151e;border-radius:8px;padding:10px">
+          <div style="color:var(--muted);font-size:10px">${l}</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px">${v}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px">📊 Dados</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:12px">${state.meals.length} refeições registradas</p>
+      <button class="btn" style="background:#ff6b6b22;color:var(--danger);border:1px solid #ff6b6b44;width:100%;font-size:13px" onclick="confirmClear()">🗑️ Apagar todos os dados</button>
+    </div>
+  </div>`;
+}
+
+// ─── Modals ───────────────────────────────────────────────────────────────────
+function renderAddModal() {
+  const s = state.addStep;
+  return `
+  <div class="modal-overlay" onclick="closeModalOverlay(event)">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <span class="modal-title">+ Registrar Refeição</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      ${s === 'input' ? `
+        <div style="margin-bottom:12px">
+          <label class="input-label">Data</label>
+          <input type="date" class="input" value="${state.addDate}" onchange="state.addDate=this.value">
+        </div>
+        <div style="margin-bottom:10px">
+          <label class="input-label">Descrição</label>
+          <textarea class="input" id="add-text" placeholder="Ex: salada de folhas + frango grelhado 150g + limão">${state.addText}</textarea>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+        <button class="photo-btn" onclick="document.getElementById('photo-input').click()">
+          ${state.addImageURL ? '📷 Foto anexada ✓' : '📷 Tirar foto / anexar imagem'}
+        </button>
+        ${state.addImageURL ? `<img src="${state.addImageURL}" class="photo-preview">` : ''}
+        ${state.addError ? `<p style="color:var(--danger);font-size:12px;margin-top:10px">${state.addError}</p>` : ''}
+        <button class="btn btn-primary" style="margin-top:14px" onclick="startAnalyze()"
+          ${!state.addText && !state.addImageB64 ? 'disabled' : ''}>Analisar com IA →</button>
+
+      ` : s === 'analyzing' ? `
+        <div style="text-align:center;padding:48px 0">
+          <div class="spinner">⚙️</div>
+          <p style="color:var(--muted);margin-top:16px">Analisando refeição...</p>
+        </div>
+
+      ` : state.addResult ? `
+        <div style="background:#13151e;border-radius:10px;padding:14px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:24px">${state.addResult.emoji}</span>
+            <span style="font-weight:600">${state.addResult.label}</span>
+            <span class="conf-badge conf-${state.addResult.confidence}" style="margin-left:auto">${state.addResult.confidence}</span>
+          </div>
+          <p style="color:var(--muted);font-size:12px;margin-bottom:10px;line-height:1.6">${state.addResult.description}</p>
+          <div class="result-grid">
+            ${[['🔥 Calorias', state.addResult.kcal, 'kcal'],['💪 Proteína', state.addResult.protein, 'g'],['🌿 Fibra', state.addResult.fiber, 'g'],['🍞 Carbs', state.addResult.carbs, 'g']].map(([l,v,u]) => `
+            <div class="result-cell">
+              <div class="result-cell-label">${l}</div>
+              <div><span class="result-cell-val">${v}</span><span class="result-cell-unit"> ${u}</span></div>
+            </div>`).join('')}
+          </div>
+          ${state.addResult.notes ? `<p style="color:var(--accent-dim);font-size:11px;margin-top:10px;font-style:italic">💡 ${state.addResult.notes}</p>` : ''}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" style="flex:1" onclick="state.addStep='input';render()">← Reanalisar</button>
+          <button class="btn btn-primary" style="flex:2" onclick="saveMealResult()">Salvar ✓</button>
+        </div>
+      ` : ''}
+    </div>
+  </div>`;
+}
+
+function renderReportModal() {
+  return `
+  <div class="modal-center" onclick="closeModalOverlay(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">📊 Relatório Nutricional</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      ${state.reportLoading
+        ? `<div style="text-align:center;padding:48px 0"><div class="spinner">📊</div><p style="color:var(--muted);margin-top:16px">Gerando análise...</p></div>`
+        : `<p class="report-text">${state.reportText || 'Nenhuma análise disponível.'}</p>`
+      }
+    </div>
+  </div>`;
+}
+
+function renderKeyModal() {
+  return `
+  <div class="modal-center" onclick="closeModalOverlay(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">🔑 Alterar API Key</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <label class="input-label">Nova chave</label>
+      <input id="new-key-input" class="input" type="password" placeholder="sk-ant-..." style="margin-bottom:12px">
+      <button class="btn btn-primary" onclick="applyNewKey()">Salvar</button>
+    </div>
+  </div>`;
+}
+
+// ─── Main render ──────────────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+
+  if (!state.apiKey) {
+    app.innerHTML = renderSetup();
+    return;
+  }
+
+  const viewMap = { today: renderToday, history: renderHistory, settings: renderSettings };
+  const tabLabels = { today: '🥗 Hoje', history: '📅 Histórico', settings: '⚙️ Config' };
+
+  let modals = '';
+  if (state.modal === 'add') modals = renderAddModal();
+  else if (state.modal === 'report') modals = renderReportModal();
+  else if (state.modal === 'key') modals = renderKeyModal();
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-row">
+        <div>
+          <div class="header-title">NutriTracker</div>
+          <div class="header-name">Diário Alimentar</div>
+        </div>
+        <button class="btn btn-outline btn-report" onclick="openReport()">📊 Relatório</button>
+      </div>
+      <div class="tabs">
+        ${Object.entries(tabLabels).map(([k,v]) =>
+          `<button class="tab ${state.view===k?'active':''}" onclick="setView('${k}')">${v}</button>`
+        ).join('')}
+      </div>
+    </div>
+    <div style="padding-top:8px">${(viewMap[state.view] || renderToday)()}</div>
+    ${modals}
+    ${state.view !== 'settings' ? `<button class="fab" onclick="openAdd()">+</button>` : ''}
+  `;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function setView(v) { state.view = v; render(); }
+function setDate(d) { state.filterDate = d; render(); }
+
+function toggleMeal(id) {
+  if (state.expandedMeals.has(id)) state.expandedMeals.delete(id);
+  else state.expandedMeals.add(id);
+  render();
+}
+
+function deleteMeal(id) {
+  if (!confirm('Excluir esta refeição?')) return;
+  state.meals = state.meals.filter(m => m.id !== id);
+  saveMeals();
+  render();
+}
+
+function openAdd() {
+  state.addStep = 'input';
+  state.addText = '';
+  state.addImageB64 = null;
+  state.addImageURL = null;
+  state.addResult = null;
+  state.addError = null;
+  state.addDate = state.filterDate;
+  state.modal = 'add';
+  render();
+}
+
+function openReport() {
+  state.modal = 'report';
+  generateReport();
+  render();
+}
+
+function closeModal() { state.modal = null; render(); }
+
+function closeModalOverlay(e) {
+  if (e.target === e.currentTarget) closeModal();
+}
+
+function startAnalyze() {
+  const t = document.getElementById('add-text');
+  if (t) state.addText = t.value;
+  if (!state.addText && !state.addImageB64) return;
+  analyzeMeal();
+}
+
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  state.addImageURL = URL.createObjectURL(file);
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state.addImageB64 = ev.target.result.split(',')[1];
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveMealResult() {
+  state.meals.push(state.addResult);
+  saveMeals();
+  state.modal = null;
+  render();
+}
+
+function saveApiKey() {
+  const k = document.getElementById('setup-key')?.value?.trim();
+  if (!k) return;
+  state.apiKey = k;
+  saveKey(k);
+  render();
+}
+
+function promptChangeKey() {
+  state.modal = 'key';
+  render();
+}
+
+function applyNewKey() {
+  const k = document.getElementById('new-key-input')?.value?.trim();
+  if (!k) return;
+  state.apiKey = k;
+  saveKey(k);
+  state.modal = null;
+  render();
+}
+
+function confirmClear() {
+  if (!confirm('Apagar todos os dados? Esta ação é irreversível.')) return;
+  state.meals = [];
+  saveMeals();
+  render();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+loadState();
+render();
+</script>
+</body>
+</html>
