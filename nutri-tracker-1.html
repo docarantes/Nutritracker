@@ -585,15 +585,17 @@ function renderAddModal() {
         </div>
         <div style="margin-bottom:10px">
           <label class="input-label">Descrição</label>
-          <textarea class="input" id="add-text" placeholder="Ex: salada de folhas + frango grelhado 150g + limão">${state.addText}</textarea>
+          <textarea class="input" id="add-text" placeholder="Ex: salada de folhas + frango grelhado 150g + limão" oninput="state.addText=this.value;syncAnalyzeBtn()">${state.addText}</textarea>
         </div>
-        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
-        <button class="photo-btn" onclick="document.getElementById('photo-input').click()">
-          ${state.addImageURL ? '📷 Foto anexada ✓' : '📷 Tirar foto / anexar imagem'}
-        </button>
+        <input type="file" id="photo-camera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+        <input type="file" id="photo-gallery" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="photo-btn" style="flex:1;margin-top:0" onclick="document.getElementById('photo-camera').click()">📷 Câmera</button>
+          <button class="photo-btn" style="flex:1;margin-top:0" onclick="document.getElementById('photo-gallery').click()">🖼️ Galeria</button>
+        </div>
         ${state.addImageURL ? `<img src="${state.addImageURL}" class="photo-preview">` : ''}
         ${state.addError ? `<p style="color:var(--danger);font-size:12px;margin-top:10px">${state.addError}</p>` : ''}
-        <button class="btn btn-primary" style="margin-top:14px" onclick="startAnalyze()"
+        <button id="analyze-btn" class="btn btn-primary" style="margin-top:14px" onclick="startAnalyze()"
           ${!state.addText && !state.addImageB64 ? 'disabled' : ''}>Analisar com IA →</button>
 
       ` : s === 'analyzing' ? `
@@ -736,6 +738,11 @@ function closeModal() { state.modal = null; render(); }
 
 function closeModalOverlay(e) {
   if (e.target === e.currentTarget) closeModal();
+}
+
+function syncAnalyzeBtn() {
+  const btn = document.getElementById('analyze-btn');
+  if (btn) btn.disabled = !state.addText && !state.addImageB64;
 }
 
 function startAnalyze() {
