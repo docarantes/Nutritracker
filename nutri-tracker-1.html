@@ -6,7 +6,31 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NutriTracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1117">
 <title>NutriTracker</title>
+<script>
+// Inline PWA manifest for fullscreen/standalone mode
+const manifest = {
+  name: "NutriTracker",
+  short_name: "NutriTracker",
+  start_url: "./nutri-tracker.html",
+  display: "standalone",
+  background_color: "#0f1117",
+  theme_color: "#0f1117",
+  orientation: "portrait",
+  icons: [
+    { src: "https://fav.farm/🥗", sizes: "192x192", type: "image/png" },
+    { src: "https://fav.farm/🥗", sizes: "512x512", type: "image/png" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+const url = URL.createObjectURL(blob);
+const link = document.createElement('link');
+link.rel = 'manifest';
+link.href = url;
+document.currentScript.after(link);
+</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
